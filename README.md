@@ -1,6 +1,6 @@
 # TFTP Client
 
-##Table of Contents
+## Table of Contents
 - [Introduction](#introduction)
 - [Tasks Accomplished](#tasks-accomplished)
 - [How to Run](#how-to-tun)
