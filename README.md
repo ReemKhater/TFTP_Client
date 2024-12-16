@@ -35,11 +35,11 @@ $ puttftp host file
 1. Clone the repository.
 2. Compile the code:
    ```
-   gcc enseash.c -o enseash
+   gcc TFTPQ1.c -o gettftp
    ```
 3. Run the TFTP client:
    ```
-   ./enseash
+   ./gettftp
    ```
 
 ---
