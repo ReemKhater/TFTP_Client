@@ -4,9 +4,9 @@
 
 - [Introduction](#introduction)
 - [Objectives](#objectives)
-- [Prerequisits](#prerequisits)
+- [Prerequisites](#prerequisites)
 - [Features](#features)
-- [How to Run](#how-to-tun)
+- [How to Run](#how-to-run)
 - [Implementation details](#implementation-details)
 
 ---
@@ -38,7 +38,7 @@ The goal of this project is to:
  
 ---
 
-## Prerequisits 
+## Prerequisites 
 
 To work on this project, ensure the following tools and environments are available:
 
@@ -54,7 +54,7 @@ To work on this project, ensure the following tools and environments are availab
 
 ## Features
 
-1. Basic TFTP operations:
+1. **Basic TFTP operations**:
    - Download files
      ```
      $ gettftp host file
@@ -64,11 +64,17 @@ To work on this project, ensure the following tools and environments are availab
      $ puttftp host file
      ```
 
-2. Domain name resolutions: Uses getaddrinfo to resolve domain names to IP addresses.
+2. **Domain name resolutions**: Uses `getaddrinfo` to resolve domain names to IP addresses, supporting both IPv4 and IPv6. 
    
-3. RFC Compliance: Implementation adheres to TFTP RFCs, including support for extensions.
+3. **RFC Compliance**: Implementation adheres to TFTP RFCs, including support for extensions.
 
-4. Interactive Output: Console-based feedback during operations.
+4. **Interactive Console Output**: provides feedback during operations.
+
+5. **Socket Connection**:
+   - Reserves a connection socket to the TFTP server on port `69` (default).
+   - Iterates through all resolved IP addresses until a connection is successfully established.
+   - Prints connection status messages for feedback.
+
 
 ---
 
@@ -95,18 +101,33 @@ gcc TFTPQ2.c -o puttftp
 
 ---
 
-## Implemenation details 
+## Implementation details 
 
 ### Question 1: Command-Line Arguments
 
 - Implemented gettftp and puttftp commands to accept server hostname and file name as arguments.
-
 - Provides interactive prompts and feedback during file transfers.
+  ```
+  Connecting to server...
+  download of the file...
+  ```
 
 ### Question 2: DNS Resolution 
 
-- Utilizes getaddrinfo to resolve domain names to IP addresses.
-
+- Utilizes `getaddrinfo` to resolve domain names to IP addresses.
+- Supports both IPv4 and IPv6 using `AF_UNSPEC`.
+- Iterates through all resolved IP addresses to attempt a connection.
 - Prints the resolved IP address for verific.
+
+### Question 3: Socket Connection
+
+- function that reserves a connection socket to the TFTP server.
+- Handles connection retries if the first address fails.
+- Prints connection status updates ("Connected to the server.").
+
+### Error Handling
+
+- Displays errors for failed domain resolution using `gai_strerror`.
+- Silently skips failed connection attempts and retries with the next resolved address.
 
 ---
