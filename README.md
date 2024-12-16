@@ -7,7 +7,7 @@
 - [Prerequisites](#prerequisites)
 - [Features](#features)
 - [How to Run](#how-to-run)
-- [Implementation details](#implementation-details)
+- [Implementation Details](#implementation-details)
 
 ---
 
@@ -101,7 +101,7 @@ gcc TFTPQ2.c -o puttftp
 
 ---
 
-## Implementation details 
+## Implementation Details 
 
 ### Question 1: Command-Line Arguments
 
