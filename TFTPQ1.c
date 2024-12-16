@@ -49,6 +49,7 @@ int main(){
     char addr_str[INET6_ADDRSTRLEN];
 
     getaddr(domain, addr_str); //recovering of the IP address of the DNS in addr_str
+    printf("The IP address is %s \n", addr_str);
     
     
 }
