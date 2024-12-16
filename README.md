@@ -37,7 +37,7 @@ $ puttftp host file
    ```
    gcc enseash.c -o enseash
    ```
-3. Run the microshell:
+3. Run the TFTP client:
    ```
    ./enseash
    ```
