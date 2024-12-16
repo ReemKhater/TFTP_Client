@@ -1,8 +1,9 @@
 # TFTP Client
 
-##Table of contents
--[Introduction](#introduction)
--[How to run](#how-to-tun)
+##Table of Contents
+- [Introduction](#introduction)
+- [Tasks Accomplished](#tasks-accomplished)
+- [How to Run](#how-to-tun)
 
 ---
 
@@ -14,7 +15,7 @@ This repository contains the code, documentation, and report for the project, co
 
 ---
 
-## Tasks accomplished
+## Tasks Accomplished
 
 We create two clients to be used from the command line:
 
