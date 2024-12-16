@@ -8,13 +8,19 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-#define PORT 69
 #define ZERO 0
+#define GET "./gettftp"
+#define PUT "./puttftp"
 
-char getaddr(const char *domain, char *addr_str){
+void PrintPrompt(const char *prompt,int size){
+	write(STDOUT_FILENO,prompt,size); //Write in the shell the right prompt
+	}
+
+void ConnectToServer(const char *domain, const char *port){
 	struct addrinfo hints;
 	struct addrinfo *res;
     struct addrinfo *rp;
+    int sockfd;
 	
 	size_t sizeHint=sizeof(hints);
 	
@@ -23,7 +29,7 @@ char getaddr(const char *domain, char *addr_str){
 	hints.ai_family = AF_UNSPEC; //Allowing IPv4 and IPv6
 	
 	
-	int ecode= getaddrinfo(domain,NULL,&hints,&res);
+	int ecode= getaddrinfo(domain,port,&hints,&res);
 
 	if(ecode!=0){
 		printf("Error: %s \n",gai_strerror(ecode));
@@ -31,25 +37,94 @@ char getaddr(const char *domain, char *addr_str){
 	}
 	
 	void *addr;
+	char addr_str[INET6_ADDRSTRLEN];
 	
 	for (rp = res; rp != NULL; rp = rp->ai_next) {
 		struct sockaddr_in *new_addr=(struct sockaddr_in *)rp->ai_addr;
 		addr=&(new_addr->sin_addr);
+		
+		sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol); //Create a socket
 			
 		inet_ntop(rp->ai_family, addr, addr_str, rp->ai_addrlen); //Convert the struct into a string
-		//printf("IP address is %s \n",addr_str);
+		
+		if (connect(sockfd, rp->ai_addr, rp->ai_addrlen) == 0) { //Trying to connect to the server
+            const char *answer="Connected to the server. \n";
+			int sizeAnswer=strlen(answer);
+		
+			PrintPrompt(answer,sizeAnswer);
+		}
 	 }
+	 
 	 freeaddrinfo(res);
-	 return *addr_str;
 }
 
+void gettftp(const char *domain, char file,const char *port){
+	const char *prompt="Connection to the server...\n";
+	int sizePrompt=strlen(prompt);
+	
+	PrintPrompt(prompt,sizePrompt);
+	
+	ConnectToServer(domain,port);
+	
+	const char *downloading="download of the file...\n";
+	int sizeDownloading= strlen(downloading);
+	
+	PrintPrompt(downloading,sizeDownloading);
+	
+	//Here the code to download the file
+	printf("%d \n",file);
 
-int main(){
+	const char *done="file download. \n";
+	int sizeDone= strlen(done);
+	
+	PrintPrompt(done,sizeDone);	
+	
+	
+}
+
+void puttftp(const char *domain, char file, const char *port){
+	const char *prompt="Connection to the server...\n";
+	int sizePrompt=strlen(prompt);
+	
+	PrintPrompt(prompt,sizePrompt);
+	
+	ConnectToServer(domain,port);
+	
+	const char *downloading="upload of the file...\n";
+	int sizeDownloading= strlen(downloading);
+	
+	PrintPrompt(downloading,sizeDownloading);
+	
+	//Here the code to download the file
+	printf("%d \n",file);
+
+	const char *done="file upload. \n";
+	int sizeDone= strlen(done);
+	
+	PrintPrompt(done,sizeDone);	
+	
+	
+}
+
+int main(int argc, char ** argv){
+	if(argc<3){
+		const char *prompt="not enough argument \n";
+		int sizePrompt=strlen(prompt);
+	
+		PrintPrompt(prompt,sizePrompt);
+		exit(EXIT_FAILURE);
+	}
+	const char *port = "69";
 	const char *domain = "srvtpinfo1.ensea.fr";
-    char addr_str[INET6_ADDRSTRLEN];
-
-    getaddr(domain, addr_str); //recovering of the IP address of the DNS in addr_str
-    printf("The IP address is %s \n", addr_str);
-    
-    
+	if(strcmp(argv[0],GET)==0){ //If using gettftp
+		gettftp(domain, *argv[2],port);
+	}else if(strcmp(argv[0],PUT)==0){ //If using puttftp
+		puttftp(domain, *argv[2],port);
+    }else{
+		const char *prompt="Function doesn't exist \n";
+		int sizePrompt=strlen(prompt);
+	
+		PrintPrompt(prompt,sizePrompt);
+		exit(EXIT_FAILURE);
+	}		
 }
