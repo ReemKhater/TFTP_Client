@@ -8,6 +8,7 @@
 - [Features](#features)
 - [How to Run](#how-to-run)
 - [Implementation Details](#implementation-details)
+- [Test Files](#test-files)
 
 ---
 
@@ -75,6 +76,12 @@ To work on this project, ensure the following tools and environments are availab
    - Iterates through all resolved IP addresses until a connection is successfully established.
    - Prints connection status messages for feedback.
 
+6. **Read Request (RRQ) Handling**:
+   - Constructs a properly formatted RRQ adhering to the TFTP RFC.
+   - Supports various file types provided by the server (e.g., `zerosXXX`, `onesXXX`, `alt256`, `ensea.png`).
+   - Handles file transfers involving:
+     - A single `DAT` packet and its acknowledgment (`ACK`).
+     - Multiple `DAT` packets and their respective `ACK`s.
 
 ---
 
@@ -82,7 +89,7 @@ To work on this project, ensure the following tools and environments are availab
 
 1. Clone the repository.
 ```
-git clone https://github.com/your-username/tftp-client.git
+git clone https://github.com/ReemKhater/TFTP_Client.git
 cd tftp-client
 ```
 2. Compile the code:
@@ -125,9 +132,30 @@ gcc TFTPQ2.c -o puttftp
 - Handles connection retries if the first address fails.
 - Prints connection status updates ("Connected to the server.").
 
+### Question 4: Read Request (RRQ) and Data Packets
+
+- Constructing an RRQ:Sends a properly formatted Read Request (RRQ) to the server, including:
+  - Operation code (0x01), file name, null terminator, and transfer mode ("octet").
+- Single Data Packet: Receives a single DAT packet from the server and sends an ACK to confirm receipt.
+- Multiple Data Packets: Handles file transfers with multiple DAT packets by:
+  - Sequentially receiving packets.
+  - Sending an ACK for each packet.
+  - Reassembling the complete file from received packets.
+
 ### Error Handling
 
 - Displays errors for failed domain resolution using `gai_strerror`.
+- Handles incorrect packet formats and unexpected responses.
 - Silently skips failed connection attempts and retries with the next resolved address.
+
+---
+
+## Test Files
+
+The TFTP server provides the following files for testing:
+- Small-sized files: zeros256, ones256, alt256.
+- Special-sized files: zeros512, ones512.
+- Larger files: zeros1024, ones1024, zeros2048, ones2048.
+- Special test file: ensea.png (use its PNG signature to verify transfer integrity).
 
 ---
