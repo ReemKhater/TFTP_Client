@@ -89,7 +89,7 @@ To work on this project, ensure the following tools and environments are availab
 1. Clone the repository.
 ```
 git clone https://github.com/ReemKhater/TFTP_Client.git
-cd tftp-client
+cd TFTP_Client
 ```
 2. Compile the code:
 ```
