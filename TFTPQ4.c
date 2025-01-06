@@ -11,7 +11,7 @@
 #define ZERO 0
 #define GET "./gettftp"
 #define PUT "./puttftp"
-#define SIZE_OF_PACKET 512
+#define SIZE_OF_PACKET 516 // 512 + the length of opcode
 
 void PrintPrompt(const char *prompt,int size){
 	write(STDOUT_FILENO,prompt,size); //Write in the shell the right prompt
@@ -23,6 +23,77 @@ int ConvertToASCII(const char *file, unsigned char *ASCIIfile){
         ASCIIfile[i]=(unsigned char) file[i];
     }
     return *ASCIIfile;
+}
+
+unsigned int ConfigureRRQPacket(const char *file, const char *mode, unsigned char *rrq_packet) {
+    unsigned char ASCIIfile[strlen(file)];
+    
+    //Initialization of the first two bits of rrq
+	rrq_packet[0]=ZERO;
+	rrq_packet[1]=1;
+	
+	ConvertToASCII(file,ASCIIfile); //Convert file in ASCII 
+	
+	unsigned int lengthOfRRQ=2;
+	for(unsigned int i=0; i<strlen(file);i++){ //Add the n bytes of the filename
+		rrq_packet[lengthOfRRQ++]=ASCIIfile[i];
+	}
+	
+	rrq_packet[lengthOfRRQ++]=ZERO; //byte seperator between the filename and the mode
+	
+
+    for (unsigned int i = 0; i < strlen(mode); i++) { //Add the mode "octet" to the packet
+        rrq_packet[lengthOfRRQ++] = (unsigned char)mode[i];
+    }
+    
+    rrq_packet[lengthOfRRQ++] = ZERO; // Byte separator to terminate the mode
+    
+    return lengthOfRRQ;
+    
+}
+
+void SendRRQ(int sockfd, unsigned char *rrq_packet, int lengthOfRRQ){
+	//Send of RRQ
+	 if (send(sockfd, rrq_packet, lengthOfRRQ, 0) == -1) { 
+        perror("RRQ packet not understand");
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void RecvDATA(int sockfd, unsigned char *data_packet, int byte_recv, unsigned char *ack_packet){
+	struct sockaddr_in sender_addr;
+    socklen_t addr_len = sizeof(sender_addr); // Length of the address structure
+    
+	do {
+        byte_recv = recvfrom(sockfd, data_packet, SIZE_OF_PACKET, 0, (struct sockaddr *)&sender_addr, &addr_len);
+        if (byte_recv < 0) {
+            perror("Error in receiving a byte");
+            close(sockfd);
+            exit(EXIT_FAILURE);
+        }
+		
+		if (data_packet[0] !=0 || data_packet[1] != 3){
+			perror("DATA packet not received \n");
+			close(sockfd);
+			exit(EXIT_FAILURE);
+		}
+
+		//Configure ACK
+		ack_packet[0]=ZERO;
+		ack_packet[1]=4;
+		ack_packet[2]=data_packet[2];
+		ack_packet[3]=data_packet[3];
+		
+	
+		//Send ACK
+		if (send(sockfd, ack_packet, sizeof(ack_packet), 0) == -1) {
+			perror("Failed to send ACK");
+			close(sockfd);
+			exit(EXIT_FAILURE);
+		}
+    
+	}while(byte_recv == SIZE_OF_PACKET); //4 is the length of the opcode
 }
 
 int ConnectToServer(const char *domain, const char *port, int *sockfd){
@@ -53,10 +124,15 @@ int ConnectToServer(const char *domain, const char *port, int *sockfd){
 		addr=&(new_addr->sin_addr);
 		
 		*sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol); //Create a socket
+		if (*sockfd == -1) {
+			perror("Socket creation failed");
+			close(*sockfd);
+			exit(EXIT_FAILURE);
+		}
 			
 		inet_ntop(rp->ai_family, addr, addr_str, rp->ai_addrlen); //Convert the struct into a string
 		
-		if (connect(*sockfd, rp->ai_addr, rp->ai_addrlen) == 0) { //Trying to connect to the server
+		if(connect(*sockfd, rp->ai_addr, rp->ai_addrlen) == 0) { //Trying to connect to the server
             const char *answer="Connected to the server. \n";
 			int sizeAnswer=strlen(answer);
 		
@@ -72,34 +148,35 @@ void gettftp(const char *domain, const char *file,const char *port){
 	int sockfd=-1;
 	const char *prompt="Connection to the server...\n";
 	int sizePrompt=strlen(prompt);
-	int rrq_packet[SIZE_OF_PACKET];
-	unsigned char ASCIIfile[strlen(file)];
+	unsigned char rrq_packet[SIZE_OF_PACKET];
+	unsigned char ack_packet[4];
+	unsigned char data_packet[SIZE_OF_PACKET];
+	int byte_recv=0; 
+	const char *mode="octet";
 	
-	//Initialization of the first two bits of rrq
-	rrq_packet[0]=ZERO;
-	rrq_packet[1]=1;
-	printf("%d \n",rrq_packet[0]);
 	
 	PrintPrompt(prompt,sizePrompt);
 	
-	ConvertToASCII(file,ASCIIfile); //Convert file in ASCII 
+	unsigned int lengthOfRRQ= ConfigureRRQPacket(file, mode,rrq_packet);
 	
-	for(unsigned int i=0; i<strlen(file);i++){ //Add the n bytes of the filename
-		rrq_packet[2+i]=ASCIIfile[i];
-	}
-	
-	//Next, continue to configure the RRQ
-	
-	ConnectToServer(domain,port,&sockfd);
-	printf("the socket is %d \n",sockfd);
-	
-	const char *downloading="download of the file...\n";
+
+    for (unsigned int i = 0; i < lengthOfRRQ; i++) {
+        printf("%02x ", rrq_packet[i]);
+    }
+    printf("\n");
+    
+    ConnectToServer(domain,port,&sockfd); //Connection to the server
+    
+    const char *downloading="download of the file...\n";
 	int sizeDownloading= strlen(downloading);
 	
 	PrintPrompt(downloading,sizeDownloading);
-	
-	//Here the code to download the file
-	printf("%s \n",file);
+    
+
+	SendRRQ(sockfd, rrq_packet, lengthOfRRQ);
+    
+    RecvDATA(sockfd, data_packet, byte_recv, ack_packet);
+    
 
 	const char *done="file download. \n";
 	int sizeDone= strlen(done);
@@ -107,7 +184,7 @@ void gettftp(const char *domain, const char *file,const char *port){
 	PrintPrompt(done,sizeDone);	
 	
 	close(sockfd); //Closing of the socket
-	const char *closing="Socket closed \n";
+	const char *closing="Socket closed. \n";
 	int sizeClosing= strlen(closing);
 	
 	PrintPrompt(closing,sizeClosing);	
