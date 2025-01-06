@@ -8,7 +8,6 @@
 - [Features](#features)
 - [How to Run](#how-to-run)
 - [Implementation Details](#implementation-details)
-- [Test Files](#test-files)
 
 ---
 
@@ -147,15 +146,5 @@ gcc TFTPQ2.c -o puttftp
 - Displays errors for failed domain resolution using `gai_strerror`.
 - Handles incorrect packet formats and unexpected responses.
 - Silently skips failed connection attempts and retries with the next resolved address.
-
----
-
-## Test Files
-
-The TFTP server provides the following files for testing:
-- Small-sized files: zeros256, ones256, alt256.
-- Special-sized files: zeros512, ones512.
-- Larger files: zeros1024, ones1024, zeros2048, ones2048.
-- Special test file: ensea.png (use its PNG signature to verify transfer integrity).
 
 ---
